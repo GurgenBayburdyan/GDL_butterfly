@@ -3,6 +3,7 @@
 #include "gpio.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 /* ===================== SPEED CONFIG ===================== */
 #define BASE_SPEED   50
@@ -169,8 +170,34 @@ void EngineRunPD(Engine_t *eng, int32_t leftSpeed, int32_t rightSpeed) {
 		Stepper_RunContinuous(&eng->rightMotor, STEPPER_DIR_CCW, (uint32_t)(-rightSpeed));
 	}
 }
+void EngineFral(Engine_t *eng, int steps1,int steps2, uint16_t maxSpeed1){
+	uint16_t minSpeed   = 10;
+	uint16_t accelSteps = 150;
 
-/* ================= ENGINE MOVE — ACCELERATION ================= */
+
+	int motorSteps1 = 0;
+	int motorSteps2 = 0;
+	int maxSpeed2 = 0;
+	motorSteps1 = (int)((float)steps1 / 0.363f);
+	motorSteps2 = (int)((float)steps2 / 0.363f);
+	motorSteps1 = abs(motorSteps1);
+	motorSteps2 = abs(motorSteps2);
+	maxSpeed2 = abs((int)((float)steps2 / steps1 * maxSpeed1));
+
+	if(steps1 > 0) Stepper_MoveStepsAccel(&eng->leftMotor,  (uint16_t)motorSteps1, STEPPER_DIR_CW, minSpeed, maxSpeed1, accelSteps);
+	else Stepper_MoveStepsAccel(&eng->leftMotor,  (uint16_t)motorSteps1, STEPPER_DIR_CCW, minSpeed, maxSpeed1, accelSteps);
+	if(steps2 > 0) Stepper_MoveStepsAccel(&eng->rightMotor, (uint16_t)motorSteps2, STEPPER_DIR_CCW, minSpeed, maxSpeed2, accelSteps);
+	else Stepper_MoveStepsAccel(&eng->rightMotor, (uint16_t)motorSteps2, STEPPER_DIR_CW, minSpeed, maxSpeed2, accelSteps);
+
+	while (EngineIsRunning(eng)) {
+		HAL_Delay(1);
+	}
+}
+
+
+//
+//}
+///* ================= ENGINE MOVE — ACCELERATION ================= */
 
 void EngineMoveAccel(Engine_t *eng, int steps, uint16_t maxSpeed, uint8_t followLine, uint8_t isStopWhenBlack) {
 	uint16_t minSpeed   = 10;
@@ -243,6 +270,7 @@ void EngineRotateAccel(Engine_t *eng, uint16_t degree, bool IsLeft, uint16_t max
 	uint16_t accelSteps = 100;
 	uint16_t steps      = (uint16_t)((float)degree * 4.9f);
 
+
 	if (IsLeft) {
 		Stepper_MoveStepsAccel(&eng->leftMotor,  steps, STEPPER_DIR_CCW, minSpeed, maxSpeed, accelSteps);
 		Stepper_MoveStepsAccel(&eng->rightMotor, steps, STEPPER_DIR_CCW,  minSpeed, maxSpeed, accelSteps);
@@ -250,6 +278,24 @@ void EngineRotateAccel(Engine_t *eng, uint16_t degree, bool IsLeft, uint16_t max
 		Stepper_MoveStepsAccel(&eng->leftMotor,  steps, STEPPER_DIR_CW,  minSpeed, maxSpeed, accelSteps);
 		Stepper_MoveStepsAccel(&eng->rightMotor, steps, STEPPER_DIR_CW, minSpeed, maxSpeed, accelSteps);
 	}
+
+	while (EngineIsRunning(eng)) {
+		HAL_Delay(1);
+	}
+}
+
+void EngineTurnAccel(Engine_t *eng, uint16_t degree, bool IsLeft, uint16_t maxSpeed) {
+	uint16_t minSpeed   = 10;
+	uint16_t accelSteps = 100;
+	uint16_t steps      = (uint16_t)((float)degree * 9.5f);
+
+
+	if (IsLeft) {
+		Stepper_MoveStepsAccel(&eng->rightMotor, steps, STEPPER_DIR_CCW,  minSpeed, maxSpeed, accelSteps);
+	} else {
+		Stepper_MoveStepsAccel(&eng->rightMotor, steps, STEPPER_DIR_CW,  minSpeed, maxSpeed, accelSteps);
+			}
+
 
 	while (EngineIsRunning(eng)) {
 		HAL_Delay(1);
@@ -271,7 +317,7 @@ void MoveServo(Engine_t *eng, ServoSelect_t servo, uint16_t degree, uint8_t hold
 	if (!s->started) Servo_Start(s);
 	Servo_SetAngle(s, (float)degree);
 	if (!hold) {
-		HAL_Delay(300);
+		HAL_Delay(1000);
 		Servo_Stop(s);
 	}
 }

@@ -35,9 +35,10 @@ void EngineRotate(Engine_t *eng, uint16_t degree, uint16_t speed, bool IsLeft);
 
 /* Stepper — PD continuous */
 void EngineRunPD(Engine_t *eng, int32_t leftSpeed, int32_t rightSpeed);
-
+void EngineTurnAccel(Engine_t *eng, uint16_t degree, bool IsLeft, uint16_t maxSpeed);
 void EngineMoveAccel(Engine_t *eng, int steps, uint16_t maxSpeed, uint8_t followLine, uint8_t isStopWhenBlack);
 void EngineRotateAccel(Engine_t *eng, uint16_t degree, bool IsLeft, uint16_t maxSpeed);
+void EngineFral(Engine_t *eng, int steps1,int steps2, uint16_t maxSpeed1);
 void MoveServo(Engine_t *eng, ServoSelect_t servo, uint16_t degree, uint8_t hold);
 void DetachServo(Engine_t *eng, ServoSelect_t servo);
 
